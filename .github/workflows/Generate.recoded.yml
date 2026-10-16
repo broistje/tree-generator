@@ -1,0 +1,1 @@
+python3 -m twrpdtgen input.img -o output_tree
