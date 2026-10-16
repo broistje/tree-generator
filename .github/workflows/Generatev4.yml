@@ -1,0 +1,78 @@
+name: Build OrangeFox oscaro
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Maximize Build Space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 1024
+          swap-size-mb: 8192
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git aria2 rsync curl bc bison build-time ccache clang flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc yasm zip zlib1g-dev
+
+      - name: Initialize OrangeFox Manifest
+        run: |
+          mkdir ~/fox_12.1 && cd ~/fox_12.1
+          git config --global user.name "Builder"
+          git config --global user.email "builder@fox.com"
+          repo init -u https://gitlab.com/OrangeFox/manifest.git -b fox_12.1 --depth=1
+          repo sync -j$(nproc --all) --force-sync
+
+      - name: Clone oscaro Device Tree & Add vendorsetup.sh
+        run: |
+          cd ~/fox_12.1
+          git clone https://github.com/Spector0/Device_Oneplus_Oscar_TWRP.git device/oneplus/oscaro
+          
+          cat << 'EOF' > device/oneplus/oscaro/vendorsetup.sh
+          export TARGET_ARCH="arm64"
+          export FOX_BUILD_DEVICE="oscaro"
+          export TARGET_DEVICE_ALT="oscar,oscaro,OnePlus Nord CE 2 Lite 5G,CPH2381,CPH2409"
+          
+          export FOX_VIRTUAL_AB_DEVICE=1
+          export FOX_RECOVERY_SYSTEM_PARTITION="/dev/block/mapper/system"
+          export FOX_RECOVERY_VENDOR_PARTITION="/dev/block/mapper/vendor"
+          
+          export OF_USE_MAGISKBOOT=1
+          export OF_USE_MAGISKBOOT_FOR_ALL_PATCHES=1
+          export OF_DONT_PATCH_ENCRYPTED_DEVICE=1
+          export OF_NO_TREBLE_COMPATIBILITY_CHECK=1
+          export OF_FBE_METADATA_MOUNT_IGNORE=1
+          
+          export OF_SCREEN_H=2400
+          export OF_STATUS_H=110
+          export OF_STATUS_INDENT_LEFT=155
+          export OF_STATUS_INDENT_RIGHT=48
+          export OF_CLOCK_POS=1
+          export OF_HIDE_NOTCH=1
+          export OF_ALLOW_DISABLE_NAVBAR=0
+          
+          export OF_MAINTAINER="Unofficial"
+          export FOX_VERSION="R11.1"
+          export FOX_BUILD_TYPE="Unofficial"
+          EOF
+
+      - name: Start Compilation
+        run: |
+          cd ~/fox_12.1
+          source build/envsetup.sh
+          export ALLOW_MISSING_DEPENDENCIES=true
+          lunch twrp_oscar-eng
+          mka adbd bootimage
+
+      - name: Upload OrangeFox Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: OrangeFox-oscaro
+          path: ~/fox_12.1/out/target/product/oscar/*.img
+          
