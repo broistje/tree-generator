@@ -1,0 +1,49 @@
+name: Build OrangeFox oscaro
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Clone Modern oscaro Device Tree
+        run: |
+          git clone https://github.com/Spector0/Device_Oneplus_Oscar_TWRP.git device/oneplus/oscaro
+
+      - name: Create OrangeFox vendorsetup.sh
+        run: |
+          mkdir -p device/oneplus/oscaro
+          cat << 'EOF' > device/oneplus/oscaro/vendorsetup.sh
+          export TARGET_ARCH="arm64"
+          export FOX_BUILD_DEVICE="oscaro"
+          export TARGET_DEVICE_ALT="oscar,oscaro,OnePlus Nord CE 2 Lite 5G,CPH2381,CPH2409"
+          
+          export FOX_VIRTUAL_AB_DEVICE=1
+          export FOX_RECOVERY_SYSTEM_PARTITION="/dev/block/mapper/system"
+          export FOX_RECOVERY_VENDOR_PARTITION="/dev/block/mapper/vendor"
+          
+          export OF_USE_MAGISKBOOT=1
+          export OF_USE_MAGISKBOOT_FOR_ALL_PATCHES=1
+          export OF_DONT_PATCH_ENCRYPTED_DEVICE=1
+          export OF_NO_TREBLE_COMPATIBILITY_CHECK=1
+          export OF_FBE_METADATA_MOUNT_IGNORE=1
+          
+          export OF_SCREEN_H=2400
+          export OF_STATUS_H=110
+          export OF_STATUS_INDENT_LEFT=155
+          export OF_STATUS_INDENT_RIGHT=48
+          export OF_CLOCK_POS=1
+          export OF_HIDE_NOTCH=1
+          export OF_ALLOW_DISABLE_NAVBAR=0
+          
+          export OF_MAINTAINER="Unofficial"
+          export FOX_VERSION="R11.1"
+          export FOX_BUILD_TYPE="Unofficial"
+          EOF
+
+      - name: List Directory for Verification
+        run: ls -la device/oneplus/oscaro
+        
