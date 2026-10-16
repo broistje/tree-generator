@@ -1,1 +1,49 @@
-python3 -m twrpdtgen input.img -o output_tree
+name: Generate Device Tree
+on:
+  workflow_dispatch:
+    inputs:
+      img_url:
+        description: 'Direct download URL to your boot.img or recovery.img'
+        required: true
+
+jobs:
+  twrpdtgen:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install Dependencies and twrpdtgen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip cpio git lz4 xz-utils file
+          pip3 install twrpdtgen
+
+      - name: Add oscaro Fallback Props to twrpdtgen
+        run: |
+          cat << 'EOF' > /tmp/oscaro.prop
+          ro.product.system.device=oscaro
+          ro.product.system.brand=oneplus
+          ro.product.system.manufacturer=OnePlus
+          ro.product.system.model=CPH2381
+          ro.product.system.name=oscaro
+          ro.build.product=oscaro
+          ro.board.platform=holi
+          ro.product.cpu.abi=arm64-v8a
+          ro.product.first_api_level=31
+          ro.build.version.release=14
+          ro.build.version.security_patch=2026-01-05
+          ro.build.description=oscaro-user 14 UP1A.231005.007 release-keys
+          EOF
+          
+          DT_PY=$(python3 -c "import twrpdtgen.device_tree as dt; print(dt.__file__)")
+          sed -i 's/self.device_info = DeviceInfo(self.build_prop)/from pathlib import Path; self.build_prop.import_props(Path("\/tmp\/oscaro.prop")); self.device_info = DeviceInfo(self.build_prop)/g' "$DT_PY"
+
+      - name: Download Image and Generate Tree
+        run: |
+          wget -L -O input.img "${{ github.event.inputs.img_url }}"
+          python3 -m twrpdtgen input.img -o output_tree
+
+      - name: Upload Generated Device Tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: Generated-Device-Tree
+          path: output_tree/
+          
