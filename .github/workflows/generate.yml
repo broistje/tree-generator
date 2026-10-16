@@ -20,17 +20,35 @@ jobs:
         run: |
           cat << 'EOF' > /tmp/oscaro.prop
           ro.product.system.device=oscaro
-          ro.product.system.brand=oneplus
-          ro.product.system.manufacturer=OnePlus
-          ro.product.system.model=CPH2381
-          ro.product.system.name=oscaro
+          ro.product.device=oscaro
           ro.build.product=oscaro
+          ro.product.system.brand=oneplus
+          ro.product.brand=oneplus
+          ro.product.system.manufacturer=OnePlus
+          ro.product.manufacturer=OnePlus
+          ro.product.system.model=CPH2381
+          ro.product.model=CPH2381
+          ro.product.system.name=oscaro
+          ro.product.name=oscaro
           ro.board.platform=holi
+          ro.boot.hardware=qcom
+          ro.hardware=qcom
+          ro.system.product.cpu.abilist=arm64-v8a,armeabi-v7a,armeabi
+          ro.product.cpu.abilist=arm64-v8a,armeabi-v7a,armeabi
           ro.product.cpu.abi=arm64-v8a
           ro.product.first_api_level=31
           ro.build.version.release=14
+          ro.system.build.version.release=14
+          ro.build.version.sdk=34
+          ro.system.build.version.sdk=34
           ro.build.version.security_patch=2026-01-05
           ro.build.description=oscaro-user 14 UP1A.231005.007 release-keys
+          ro.system.build.description=oscaro-user 14 UP1A.231005.007 release-keys
+          ro.build.fingerprint=OnePlus/CPH2381/OP535DL1:14/UP1A.231005.007/U.R4T3.1731b77-1:user/release-keys
+          ro.system.build.fingerprint=OnePlus/CPH2381/OP535DL1:14/UP1A.231005.007/U.R4T3.1731b77-1:user/release-keys
+          ro.build.ab_update=true
+          ro.virtual_ab.enabled=true
+          ro.boot.dynamic_partitions=true
           EOF
           
           DT_PY=$(python3 -c "import twrpdtgen.device_tree as dt; print(dt.__file__)")
